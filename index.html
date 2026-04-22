@@ -1,1 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媽媽金句王</title>
+    <style>
+        :root { --primary-red: #d35b5b; --bg-cream: #fdf8f1; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg-cream); margin: 0; padding: 0; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; text-align: center; }
+        .step { display: none; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        h2 { color: var(--primary-red); margin-bottom: 20px; }
+        textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+        button:disabled { background-color: #ccc; }
+        
+        canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
+        .instruction { font-size: 14px; color: #888; margin-top: 10px; }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <!-- Step 1: 媽媽金句 -->
+    <div id="step1" class="step active">
+        <h2>🌸 媽媽金句王 🌸</h2>
+        <p>分享最常聽到的媽媽說的一句話</p>
+        <textarea id="quoteInput" rows="3" placeholder="例如：這麼做是為你好"></textarea>
+        <button id="btn1" onclick="submitQuote()">送出金句，製作卡片</button>
+    </div>
+
+    <!-- Step 2: 製作卡片 -->
+    <div id="step2" class="step">
+        <h2>💖 愛在心裡難開口</h2>
+        <input type="text" id="cardTitle" placeholder="標題（例如：輸入區）" maxlength="10">
+        <textarea id="cardContent" rows="3" placeholder="卡片內容輸入區（建議20字內）" maxlength="40"></textarea>
+        <input type="text" id="cardSender" placeholder="您的姓名" maxlength="8">
+        <button onclick="drawCard()">預覽卡片</button>
+        
+        <canvas id="cardCanvas"></canvas>
+        <div id="saveInstruction" style="display:none;">
+            <p class="instruction">💡 長按圖片即可「儲存」或「傳送」給媽媽</p>
+            <button onclick="nextToRaffle()">完成分享，抽大獎</button>
+        </div>
+    </div>
+
+    <!-- Step 3: 快來抽獎 -->
+    <div id="step3" class="step">
+        <h2>🎁 快來抽獎</h2>
+        <input type="text" id="empId" placeholder="工號 (例如: 202600510)">
+        <input type="text" id="dept" placeholder="部門">
+        <input type="text" id="name" placeholder="姓名">
+        <button id="btn3" onclick="submitRaffle()">完成抽獎</button>
+    </div>
+</div>
+
+<script>
+    // 🚩 請將此處替換為您 GAS 部署後的「網頁應用程式網址」
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzIkD8DL7U3GTmz_an7_g7Yexc7-9csCQdSeRwkZ1hSYYGxClUoq2c5Tw7uBJSsdFbZsg/exec"; 
+    
+    // 🚩 請將此處替換為您的卡片底圖 URL (可放在 GitHub 內)
+    const CARD_TEMPLATE_URL = "card_template.jpg"; 
+
+    // Step 1: 送出金句
+    async function submitQuote() {
+        const quote = document.getElementById('quoteInput').value;
+        if (!quote) return alert("請輸入內容");
+        
+        const btn = document.getElementById('btn1');
+        btn.disabled = true;
+        btn.innerText = "傳送中...";
+
+        try {
+            await fetch(GAS_URL + "?action=saveQuote&quote=" + encodeURIComponent(quote), { method: 'POST' });
+            showStep(2);
+        } catch (e) {
+            alert("連線錯誤，請稍後再試");
+            btn.disabled = false;
+        }
+    }
+
+    // Step 2: 繪製卡片
+    function drawCard() {
+        const canvas = document.getElementById('cardCanvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.crossOrigin = "anonymous"; 
+        img.src = CARD_TEMPLATE_URL;
+
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            ctx.fillStyle = "#8e443d"; // 棕紅色調
+
+            // 1. 標題 (對應圖片左上「輸入區」)
+            ctx.font = "bold 60px Microsoft JhengHei";
+            ctx.fillText(document.getElementById('cardTitle').value, 150, 240);
+
+            // 2. 內容 (對應圖片左中「內容輸入區」)
+            ctx.font = "40px Microsoft JhengHei";
+            const content = document.getElementById('cardContent').value;
+            wrapText(ctx, content, 150, 360, 600, 55);
+
+            // 3. 署名 (對應圖片右下「愛您的____」)
+            ctx.font = "38px Microsoft JhengHei";
+            const sender = document.getElementById('cardSender').value;
+            ctx.fillText(sender, 740, 895);
+
+            document.getElementById('saveInstruction').style.display = 'block';
+        };
+    }
+
+    // 文字自動換行小工具
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+        var words = text.split('');
+        var line = '';
+        for(var n = 0; n < words.length; n++) {
+            var testLine = line + words[n];
+            var metrics = context.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                context.fillText(line, x, y);
+                line = words[n];
+                y += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        context.fillText(line, x, y);
+    }
+
+    function nextToRaffle() {
+        showStep(3);
+    }
+
+    // Step 3: 送出抽獎
+    async function submitRaffle() {
+        const data = {
+            action: 'saveRaffle',
+            empId: document.getElementById('empId').value,
+            dept: document.getElementById('dept').value,
+            name: document.getElementById('name').value
+        };
+
+        if(!data.empId || !data.name) return alert("請填妥資料");
+
+        const btn = document.getElementById('btn3');
+        btn.disabled = true;
+        btn.innerText = "提交中...";
+
+        try {
+            const query = new URLSearchParams(data).toString();
+            await fetch(GAS_URL + "?" + query, { method: 'POST' });
+            alert("完成活動！祝您中大獎 🎁");
+            // 可導向公司官網或結束頁
+        } catch (e) {
+            alert("提交失敗，請檢查網路");
+            btn.disabled = false;
+        }
+    }
+
+    function showStep(stepNum) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + stepNum).classList.add('active');
+        window.scrollTo(0,0);
+    }
+</script>
+
+</body>
+</html>

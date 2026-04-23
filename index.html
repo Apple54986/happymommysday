@@ -111,11 +111,18 @@
             canvas.width = img.width; canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
             ctx.fillStyle = "#8e443d"; 
-            ctx.font = "bold 55px Microsoft JhengHei";
-            ctx.fillText(document.getElementById('cardTitle').value, 150, 230);
-            ctx.font = "38px Microsoft JhengHei";
-            wrapText(ctx, document.getElementById('cardContent').value, 150, 360, 650, 55);
-            ctx.fillText(document.getElementById('cardSender').value, 740, 888);
+            // 1. 標題：稍微往上提一點點
+        ctx.font = "bold 60px Microsoft JhengHei"; 
+        ctx.fillText(document.getElementById('cardTitle').value, 100, 180); 
+
+        // 2. 內容：調整起始高度與行距
+        ctx.font = "50px Microsoft JhengHei";
+        wrapText(ctx, document.getElementById('cardContent').value, 100, 300, 700, 50); 
+
+        // 3. 署名：關鍵修正！將 X 座標增加，讓名字對齊「愛您的」
+        ctx.font = "bold 38px Microsoft JhengHei"; 
+        // 建議 X 改為 840 左右，Y 維持 885~890
+        ctx.fillText(document.getElementById('cardSender').value, 840, 888);
             
             const dataURL = canvas.toDataURL("image/jpeg", 0.9);
             const finalImg = document.getElementById('finalImg');

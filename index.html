@@ -135,11 +135,11 @@
 
             // 2. 內容排版 (X:130, Y:340, 寬度限制縮小到 780 以免撞牆, 行距 60)
             ctx.font = "55px Microsoft JhengHei";
-            wrapText(ctx, content, 230, 340, 1200, 80); 
+            wrapText(ctx, content, 230, 340, 800, 80); 
 
             // 3. 署名排版 (X:850 靠右側, Y:890)
             ctx.font = "bold 40px Microsoft JhengHei"; 
-            ctx.fillText(sender, 850, 1110);
+            ctx.fillText(sender, 850, 900);
             
             // 轉成可長按圖片
             const dataURL = canvas.toDataURL("image/jpeg", 0.9);

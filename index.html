@@ -51,10 +51,10 @@
         <h2>愛在心裡口難開</h2>
         <p style="font-size: 14px; color: #d35b5b;">(輸入完成後，請點擊預覽按鈕產生卡片)</p>
         <input type="text" id="cardTitle" placeholder="例如：親愛的老母大人" maxlength="10">
-        <textarea id="cardContent" rows="3" placeholder="例如：謝謝您的付出與辛勞，我愛您！" maxlength="60"></textarea>
-        <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="8">
+        <!-- 🚩 字數限制修改為 56 -->
+        <textarea id="cardContent" rows="3" placeholder="例如：謝謝您的付出與辛勞，我愛您！" maxlength="56"></textarea>
+        <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
         
-        <!-- 重複預覽按鈕 -->
         <button id="btnPreview" onclick="drawCard()">預覽專屬卡片</button>
         
         <canvas id="cardCanvas" style="display:none;"></canvas>
@@ -110,7 +110,6 @@
         setTimeout(() => { showStep(2); }, 1500);
     }
 
-    // 繪製卡片邏輯優化
     function drawCard() {
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
@@ -129,29 +128,24 @@
             ctx.drawImage(img, 0, 0);
             ctx.fillStyle = "#8e443d"; 
             
-            // 1. 標題排版 (X:130, Y:220)
+            // 🚩 座標維持原樣
             ctx.font = "bold 66px Microsoft JhengHei"; 
             ctx.fillText(title, 230, 290); 
 
-            // 2. 內容排版 (X:130, Y:340, 寬度限制縮小到 780 以免撞牆, 行距 60)
             ctx.font = "55px Microsoft JhengHei";
             wrapText(ctx, content, 230, 400, 800, 80); 
 
-            // 3. 署名排版 (X:880 靠右側, Y:800)
             ctx.font = "bold 40px Microsoft JhengHei"; 
             ctx.fillText(sender, 880, 800);
             
-            // 轉成可長按圖片
             const dataURL = canvas.toDataURL("image/jpeg", 0.9);
             const finalImg = document.getElementById('finalImg');
             finalImg.src = dataURL;
             finalImg.style.display = 'block';
             
-            // 顯示下方操作區與更新按鈕文字
             document.getElementById('saveInstruction').style.display = 'block';
             document.getElementById('btnPreview').innerText = "重新產生預覽圖片";
             
-            // 自動滾動到下方看到成品
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         };
     }
@@ -176,15 +170,26 @@
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
+    // 🚩 僅調整換行邏輯，不影響座標
     function wrapText(context, text, x, y, maxWidth, lineHeight) {
-        var words = text.split(''); var line = '';
-        for(var n = 0; n < words.length; n++) {
-            var testLine = line + words[n];
-            if (context.measureText(testLine).width > maxWidth && n > 0) {
-                context.fillText(line, x, y); line = words[n]; y += lineHeight;
-            } else { line = testLine; }
+        const lines = text.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            let words = lines[i].split('');
+            let line = '';
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n];
+                let metrics = context.measureText(testLine);
+                if (metrics.width > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n];
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+            y += lineHeight; 
         }
-        context.fillText(line, x, y);
     }
 
     function submitRaffle() {

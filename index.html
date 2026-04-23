@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>媽咪金句王</title>
+    <!-- 引入 LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root { --primary-red: #d35b5b; --bg-cream: #fdf8f1; }
@@ -14,9 +15,18 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         h2 { color: var(--primary-red); margin-bottom: 20px; }
         textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        
+        /* 一般按鈕樣式 */
         button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
         button:disabled { background-color: #ccc; }
-        .share-btn { background-color: #06C755 !important; }
+
+        /* 🚩 分享按鈕改為白色樣式 */
+        .share-btn { 
+            background-color: white !important; 
+            color: var(--primary-red) !important; 
+            border: 2px solid var(--primary-red) !important; 
+        }
+        
         .next-btn { background-color: #f39c12 !important; display: none; }
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
         #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
@@ -27,6 +37,7 @@
 <body>
 
 <div class="container">
+    <!-- 步驟 1 -->
     <div id="step1" class="step active">
         <h2>🌸 媽咪金句王 🌸</h2>
         <p>分享最常聽到的媽媽說的一句話</p>
@@ -34,22 +45,27 @@
         <button id="btn1" onclick="submitQuote()">送出金句，製作卡片</button>
     </div>
 
+    <!-- 步驟 2 -->
     <div id="step2" class="step">
-        <h2>💖 愛在心裡難開口</h2>
-        <input type="text" id="cardTitle" placeholder="標題 (例如: 老媽咪)" maxlength="10">
-        <textarea id="cardContent" rows="3" placeholder="想說的話 (例如: 我愛您，辛苦了！)" maxlength="40"></textarea>
+        <h2>愛在心裡口難開</h2>
+        <input type="text" id="cardTitle" placeholder="標題 (例如: 親愛的老母大人)" maxlength="10">
+        <textarea id="cardContent" rows="3" placeholder="想說的話 (例如: 謝謝您的付出與辛勞💖我愛您！)" maxlength="40"></textarea>
         <input type="text" id="cardSender" placeholder="您的姓名" maxlength="8">
         <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
+        
         <canvas id="cardCanvas" style="display:none;"></canvas>
         <img id="finalImg" alt="卡片生成成功">
+        
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊綠色按鈕分享卡片，抽獎鈕隨後出現</p>
+            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方按鈕分享卡片，抽獎鈕隨後出現</p>
+            <!-- 分享按鈕現在是白底紅字 -->
             <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
             <button class="next-btn" id="btnNextStep" onclick="showStep(3)">完成分享！參加抽獎 🎁</button>
             <p id="longPressTip" class="instruction" style="display:none;">(若無法自動分享，請長按圖片傳送後點擊按鈕繼續)</p>
         </div>
     </div>
 
+    <!-- 步驟 3 -->
     <div id="step3" class="step">
         <h2>🎁 快來抽獎</h2>
         <input type="text" id="empId_display" placeholder="工號">
@@ -69,8 +85,7 @@
 <iframe name="hidden_iframe" id="hidden_iframe"></iframe>
 
 <script>
-    // 🚩 這裡填入您剛才複製的最新 GAS 網址
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxb6ZH2XrdWxYbQVFmbiNoDBWXVUq_rZV1KffVT5OkDQFjwQs9o3C3TqQpxiwxhrLQApg/exec"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxb6ZH2XrdWxybQVFmbiNoDBWXVUq_rZV1KffVT5OkDQFjwQs9o3C3TqQpxiwxhrLQapg/exec"; 
     const CARD_TEMPLATE_URL = "2026mommy.jpg"; 
     const MY_LIFF_ID = "2009874827-0sg2wphM"; 
 
@@ -102,16 +117,10 @@
             canvas.width = img.width; canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
             ctx.fillStyle = "#8e443d"; 
-            
-            // 標題位置
             ctx.font = "bold 55px Microsoft JhengHei"; 
             ctx.fillText(document.getElementById('cardTitle').value, 110, 180); 
-
-            // 內容位置
             ctx.font = "38px Microsoft JhengHei";
             wrapText(ctx, document.getElementById('cardContent').value, 110, 310, 700, 55); 
-
-            // 署名位置微調 (X 改為 840，讓名字出現在「愛您的」右邊)
             ctx.font = "bold 38px Microsoft JhengHei"; 
             ctx.fillText(document.getElementById('cardSender').value, 840, 888);
             

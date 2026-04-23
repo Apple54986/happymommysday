@@ -171,7 +171,7 @@
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             const file = new File([blob], "mommy_card.jpg", { type: "image/jpeg" });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: '母親節卡片' });
+                await navigator.share({ files: [file], title: '母親節快樂🌼' });
                 unlockNextStep();
             } else {
                 unlockNextStep();

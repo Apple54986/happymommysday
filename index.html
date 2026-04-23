@@ -17,7 +17,8 @@
         textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
         button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
         button:disabled { background-color: #ccc; }
-        .share-btn { background-color: #06C755 !important; } /* LINE 綠色 */
+        .share-btn { background-color: #06C755 !important; }
+        .next-btn { background-color: #f39c12 !important; display: none; } /* 初始隱藏下一步按鈕 */
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
         #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
@@ -41,15 +42,19 @@
         <input type="text" id="cardTitle" placeholder="標題 (例如: 親愛的老母大人)" maxlength="10">
         <textarea id="cardContent" rows="3" placeholder="想說的話..." maxlength="40"></textarea>
         <input type="text" id="cardSender" placeholder="您的姓名" maxlength="8">
-        <button onclick="drawCard()">預覽並生成卡片</button>
+        <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
         
         <canvas id="cardCanvas" style="display:none;"></canvas>
-        <img id="finalImg" alt="卡片製作成功">
+        <img id="finalImg" alt="卡片生成成功">
         
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" style="color:#d35b5b; font-weight:bold;">💡 點擊下方按鈕分享卡片，或長按圖片儲存</p>
-            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片</button>
-            <button onclick="showStep(3)">下一步：參加抽獎</button>
+            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方綠色按鈕分享卡片給媽咪吧！</p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
+            
+            <!-- 分享完後才會出現的按鈕 -->
+            <button class="next-btn" id="btnNextStep" onclick="showStep(3)">完成分享！參加抽獎 🎁</button>
+            
+            <p id="longPressTip" class="instruction" style="display:none;">(若無法自動分享，請長按圖片儲存後手動傳送，並點擊上方按鈕繼續)</p>
         </div>
     </div>
 
@@ -59,7 +64,7 @@
         <input type="text" id="empId_display" placeholder="工號">
         <input type="text" id="dept_display" placeholder="部門">
         <input type="text" id="name_display" placeholder="姓名">
-        <button id="btn3" onclick="submitRaffle()">完成抽獎</button>
+        <button id="btn3" onclick="submitRaffle()">完成抽獎報名</button>
     </div>
 </div>
 
@@ -119,32 +124,43 @@
             canvas.style.display = 'none';
 
             document.getElementById('saveInstruction').style.display = 'block';
+            document.getElementById('btnPreview').style.display = 'none'; // 生成後隱藏預覽鈕
             window.scrollTo(0, document.body.scrollHeight);
         };
     }
 
-    // 分享卡片圖檔的功能 (Web Share API)
+    // 分享卡片圖檔
     async function shareCardImage() {
         const canvas = document.getElementById('cardCanvas');
         try {
-            // 1. 將畫布轉換為 Blob
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             const file = new File([blob], "mommy_card.jpg", { type: "image/jpeg" });
 
-            // 2. 檢查瀏覽器是否支援檔案分享
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
                     title: '給媽咪的卡片',
                     text: '母親節快樂！'
                 });
+                // 分享動作完成後（不論是否真的送出，只要喚起選單並結束）顯示下一步
+                unlockNextStep();
             } else {
                 alert("您的裝置不支援自動分享，請長按圖片選擇「傳送給好友」。");
+                unlockNextStep(); // 備案：不支援分享的裝置直接解鎖，避免卡關
+                document.getElementById('longPressTip').style.display = 'block';
             }
         } catch (error) {
-            console.error("分享失敗:", error);
-            alert("分享過程發生錯誤，請改用長按圖片儲存。");
+            console.log("分享被取消或發生錯誤:", error);
+            // 為了不讓同仁因為取消分享而卡住，建議也解鎖，或是提示他要分享才能抽獎
+            alert("提醒：分享卡片給媽媽後，即可參加抽獎喔！");
+            unlockNextStep(); 
         }
+    }
+
+    function unlockNextStep() {
+        document.getElementById('btnNextStep').style.display = 'block';
+        document.getElementById('btnShare').innerText = "再次分享卡片";
+        window.scrollTo(0, document.body.scrollHeight);
     }
 
     function wrapText(context, text, x, y, maxWidth, lineHeight) {
@@ -162,7 +178,7 @@
         const empId = document.getElementById('empId_display').value;
         const dept = document.getElementById('dept_display').value;
         const name = document.getElementById('name_display').value;
-        if(!empId || !name) return alert("請填妥資料");
+        if(!empId || !name) return alert("請確認資料");
         document.getElementById('btn3').disabled = true;
         document.getElementById('btn3').innerText = "提交中...";
         const form = document.getElementById('gasForm');
@@ -173,7 +189,7 @@
         document.getElementById('form_name').value = name;
         form.submit();
         setTimeout(() => {
-            alert("完成活動！祝您中獎！");
+            alert("活動報名成功！預祝您中獎！");
             document.getElementById('btn3').innerText = "已參加抽獎";
         }, 1500);
     }

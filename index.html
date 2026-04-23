@@ -17,6 +17,7 @@
         button:disabled { background-color: #ccc; }
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
+        #hidden_iframe { display: none; }
     </style>
 </head>
 <body>
@@ -26,15 +27,15 @@
     <div id="step1" class="step active">
         <h2>🌸 媽咪金句王 🌸</h2>
         <p>分享最常聽到的媽媽說的一句話</p>
-        <textarea id="quoteInput" rows="3" placeholder="例如：我這麼做是為你好"></textarea>
+        <textarea id="quoteInput_display" rows="3" placeholder="例如：我這麼做是為你好"></textarea>
         <button id="btn1" onclick="submitQuote()">送出金句，製作卡片</button>
     </div>
 
     <!-- 步驟 2 -->
     <div id="step2" class="step">
         <h2>💖 愛在心裡難開口</h2>
-        <input type="text" id="cardTitle" placeholder="標題（例如：給最親愛的媽）" maxlength="10">
-        <textarea id="cardContent" rows="3" placeholder="內容（例如：母親節快樂，辛苦了！）" maxlength="40"></textarea>
+        <input type="text" id="cardTitle" placeholder="標題 (例如: 親愛的老母大人)" maxlength="10">
+        <textarea id="cardContent" rows="3" placeholder="想說的話..." maxlength="40"></textarea>
         <input type="text" id="cardSender" placeholder="您的姓名" maxlength="8">
         <button onclick="drawCard()">預覽並生成卡片</button>
         <canvas id="cardCanvas" style="display:none;"></canvas>
@@ -47,44 +48,51 @@
     <!-- 步驟 3 -->
     <div id="step3" class="step">
         <h2>🎁 快來抽獎</h2>
-        <input type="text" id="empId" placeholder="工號 (例如: 202600510)">
-        <input type="text" id="dept" placeholder="部門">
-        <input type="text" id="name" placeholder="姓名">
+        <input type="text" id="empId_display" placeholder="工號">
+        <input type="text" id="dept_display" placeholder="部門">
+        <input type="text" id="name_display" placeholder="姓名">
         <button id="btn3" onclick="submitRaffle()">完成抽獎報名</button>
     </div>
 </div>
 
+<!-- 隱形的表單：這是解決電腦版連線錯誤的關鍵 -->
+<form id="gasForm" action="" method="get" target="hidden_iframe" style="display:none;">
+    <input type="hidden" name="action" id="form_action">
+    <input type="hidden" name="quote" id="form_quote">
+    <input type="hidden" name="empId" id="form_empId">
+    <input type="hidden" name="dept" id="form_dept">
+    <input type="hidden" name="name" id="form_name">
+</form>
+<iframe name="hidden_iframe" id="hidden_iframe"></iframe>
+
 <script>
-    // 🚩 修改這裡：請貼入您剛才部署得到的 URL
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxb6ZH2XrdWxYbQVFmbiNoDBWXVUq_rZV1KffVT5OkDQFjwQs9o3C3TqQpxiwxhrLQApg/exec"; 
+    // 🚩 這裡填入您的 GAS URL (最後確定的那串)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzIkD8DL7U3GTmz_an7_g7Yexc7-9csCQdSeRwkZ1hSYYGxClUoq2c5Tw7uBJSsdFbZsg/exec"; 
     const CARD_TEMPLATE_URL = "2026mommy.jpg"; 
 
-    // 送出金句
-    async function submitQuote() {
-        const quote = document.getElementById('quoteInput').value;
+    function submitQuote() {
+        const quote = document.getElementById('quoteInput_display').value;
         if (!quote) return alert("請輸入內容");
-        const btn = document.getElementById('btn1');
-        btn.disabled = true;
-        btn.innerText = "傳送中...";
+        
+        document.getElementById('btn1').disabled = true;
+        document.getElementById('btn1').innerText = "傳送中...";
 
-        // 改用 GET 方式傳送，避開連線錯誤
-        fetch(`${GAS_URL}?action=saveQuote&quote=${encodeURIComponent(quote)}`, { mode: 'no-cors' })
-        .then(() => {
-            showStep(2);
-        })
-        .catch(() => {
-            // no-cors 模式下可能會報錯但其實資料有送出，所以我們還是跳下一步
-            showStep(2);
-        });
+        // 填寫隱藏表單並送出
+        const form = document.getElementById('gasForm');
+        form.action = GAS_URL;
+        document.getElementById('form_action').value = "saveQuote";
+        document.getElementById('form_quote').value = quote;
+        form.submit();
+
+        setTimeout(() => { showStep(2); }, 1500);
     }
 
-    // 畫卡片
     function drawCard() {
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.crossOrigin = "anonymous"; 
-        img.src = CARD_TEMPLATE_URL;
+        img.src = CARD_TEMPLATE_URL + "?v=" + new Date().getTime(); // 加上隨機數防止電腦版緩存舊圖
         img.onload = function() {
             canvas.width = img.width; canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
@@ -110,20 +118,28 @@
         context.fillText(line, x, y);
     }
 
-    // 送出抽獎
-    async function submitRaffle() {
-        const empId = document.getElementById('empId').value;
-        const dept = document.getElementById('dept').value;
-        const name = document.getElementById('name').value;
+    function submitRaffle() {
+        const empId = document.getElementById('empId_display').value;
+        const dept = document.getElementById('dept_display').value;
+        const name = document.getElementById('name_display').value;
         if(!empId || !name) return alert("請填妥資料");
-        const btn = document.getElementById('btn3');
-        btn.disabled = true;
-        
-        const params = `action=saveRaffle&empId=${encodeURIComponent(empId)}&dept=${encodeURIComponent(dept)}&name=${encodeURIComponent(name)}`;
-        fetch(`${GAS_URL}?${params}`, { mode: 'no-cors' })
-        .then(() => {
-            alert("完成活動！預祝您中獎！");
-        });
+
+        document.getElementById('btn3').disabled = true;
+        document.getElementById('btn3').innerText = "提交中...";
+
+        // 填寫隱藏表單並送出
+        const form = document.getElementById('gasForm');
+        form.action = GAS_URL;
+        document.getElementById('form_action').value = "saveRaffle";
+        document.getElementById('form_empId').value = empId;
+        document.getElementById('form_dept').value = dept;
+        document.getElementById('form_name').value = name;
+        form.submit();
+
+        setTimeout(() => {
+            alert("完成活動！祝您中獎！");
+            document.getElementById('btn3').innerText = "已完成報名";
+        }, 1500);
     }
 
     function showStep(s) {

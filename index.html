@@ -51,7 +51,7 @@
             <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方按鈕，立即分享卡片</p>
             <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
             <button class="next-btn" id="btnNextStep" onclick="showStep(3)">完成分享！參加抽獎🎁</button>
-            <p id="longPressTip" class="instruction" style="display:none;">(若無法分享，請長按圖片儲存傳送，並按抽獎按鈕)</p>
+            <p id="longPressTip" class="instruction" style="display:none;">(若無法分享，請長按圖片儲存傳送)</p>
         </div>
     </div>
 
@@ -101,7 +101,7 @@
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
 
-        if(!title || !content || !sender) return alert("請完整填寫喔！");
+        if(!title || !content || !sender) return alert("請填寫完整");
 
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
@@ -132,7 +132,7 @@
             finalImg.style.display = 'block';
             
             document.getElementById('saveInstruction').style.display = 'block';
-            document.getElementById('btnPreview').innerText = "重新產生預覽圖片";
+            document.getElementById('btnPreview').innerText = "重新產生預覽卡片";
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         };
     }
@@ -199,8 +199,8 @@
         document.getElementById('form_name').value = name;
         form.submit();
         setTimeout(() => {
-            alert("抽獎報名成功！祝您中大獎 🎁");
-            document.getElementById('btn3').innerText = "已報名完成";
+            alert("抽獎報名成功！祝您中大獎🎁");
+            document.getElementById('btn3').innerText = "已完成活動";
         }, 1500);
     }
 

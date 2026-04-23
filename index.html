@@ -21,7 +21,6 @@
         #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
         #hidden_iframe { display: none; }
-        .share-btn { background-color: #06C755 !important; }
     </style>
 </head>
 <body>
@@ -49,7 +48,6 @@
         
         <div id="saveInstruction" style="display:none;">
             <p class="instruction" style="color:#d35b5b; font-weight:bold;">💡 操作提示：長按圖片可儲存或傳送給好友</p>
-            <button class="share-btn" onclick="shareToFriends()">分享活動連結給同事</button>
             <button onclick="showStep(3)">下一步：參加抽獎</button>
         </div>
     </div>
@@ -74,11 +72,8 @@
 <iframe name="hidden_iframe" id="hidden_iframe"></iframe>
 
 <script>
-    // 🚩 這裡填入您的 GAS URL
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzIkD8DL7U3GTmz_an7_g7Yexc7-9csCQdSeRwkZ1hSYYGxClUoq2c5Tw7uBJSsdFbZsg/exec"; 
     const CARD_TEMPLATE_URL = "2026mommy.jpg"; 
-    
-    // 🚩 這裡填入您在 LINE Developers 取得的 LIFF ID (網址最後那一串數字英文)
     const MY_LIFF_ID = "2009874827-0sg2wphM"; 
 
     // --- LIFF 初始化 ---
@@ -87,14 +82,8 @@
         .then(() => {
             if (!liff.isLoggedIn()) {
                 liff.login();
-            } else {
-                // 自動帶入 LINE 的名字到抽獎表單
-                liff.getProfile().then(profile => {
-                    document.getElementById('name_display').value = profile.displayName;
-                    // 同步填入卡片署名，節省使用者時間
-                    document.getElementById('cardSender').value = profile.displayName;
-                });
             }
+            // 已移除自動填入姓名的邏輯，讓同仁手動輸入
         })
         .catch((err) => { console.log('LIFF 初始化失敗', err); });
     };
@@ -128,13 +117,12 @@
             wrapText(ctx, document.getElementById('cardContent').value, 150, 360, 650, 55);
             ctx.fillText(document.getElementById('cardSender').value, 740, 888);
             
-            // --- 重點：將畫布轉成圖片，利於手機長按儲存/分享 ---
+            // 將畫布轉成圖片，利於手機長按儲存/分享
             const dataURL = canvas.toDataURL("image/jpeg");
             const finalImg = document.getElementById('finalImg');
             finalImg.src = dataURL;
             finalImg.style.display = 'block';
             canvas.style.display = 'none';
-            // ---------------------------------------------
 
             document.getElementById('saveInstruction').style.display = 'block';
             window.scrollTo(0, document.body.scrollHeight);
@@ -150,40 +138,6 @@
             } else { line = testLine; }
         }
         context.fillText(line, x, y);
-    }
-
-    // 分享活動連結給朋友 (LIFF 專屬功能)
-    function shareToFriends() {
-        if (!liff.isLoggedIn()) return liff.login();
-        if (liff.isApiAvailable('shareTargetPicker')) {
-            liff.shareTargetPicker([
-                {
-                    "type": "flex",
-                    "altText": "媽咪金句王：抽大獎活動開始囉！",
-                    "contents": {
-                        "type": "bubble",
-                        "body": {
-                            "type": "box", "layout": "vertical",
-                            "contents": [
-                                { "type": "text", "text": "🌸 母親節限定活動", "weight": "bold", "color": "#d35b5b", "size": "sm" },
-                                { "type": "text", "text": "媽咪金句王：抽大獎", "weight": "bold", "size": "xl", "margin": "md" },
-                                { "type": "text", "text": "快來製作專屬卡片，並參加公司抽獎！", "wrap": true, "size": "sm", "margin": "md", "color": "#666666" }
-                            ]
-                        },
-                        "footer": {
-                            "type": "box", "layout": "vertical",
-                            "contents": [
-                                { "type": "button", "action": { "type": "uri", "label": "點我參加", "uri": "https://liff.line.me/" + MY_LIFF_ID }, "style": "primary", "color": "#d35b5b" }
-                            ]
-                        }
-                    }
-                }
-            ]).then(() => {
-                console.log("分享完成");
-            }).catch(error => {
-                console.log("分享取消");
-            });
-        }
     }
 
     function submitRaffle() {

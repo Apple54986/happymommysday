@@ -117,11 +117,11 @@
             canvas.width = img.width; canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
             ctx.fillStyle = "#8e443d"; 
-            ctx.font = "bold 55px Microsoft JhengHei"; 
-            ctx.fillText(document.getElementById('cardTitle').value, 110, 180); 
-            ctx.font = "38px Microsoft JhengHei";
-            wrapText(ctx, document.getElementById('cardContent').value, 110, 310, 700, 55); 
-            ctx.font = "bold 38px Microsoft JhengHei"; 
+            ctx.font = "bold 60px Microsoft JhengHei"; 
+            ctx.fillText(document.getElementById('cardTitle').value, 180, 180); 
+            ctx.font = "45px Microsoft JhengHei";
+            wrapText(ctx, document.getElementById('cardContent').value, 180, 310, 700, 55); 
+            ctx.font = "bold 60px Microsoft JhengHei"; 
             ctx.fillText(document.getElementById('cardSender').value, 840, 888);
             
             const dataURL = canvas.toDataURL("image/jpeg", 0.9);

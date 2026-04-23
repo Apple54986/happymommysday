@@ -16,11 +16,12 @@
         h2 { color: var(--primary-red); margin-bottom: 20px; }
         textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
         
-        /* 一般按鈕樣式 */
-        button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+        /* 一般紅色按鈕樣式 */
+        button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; transition: 0.3s; }
         button:disabled { background-color: #ccc; }
+        button:active { transform: scale(0.98); }
 
-        /* 🚩 分享按鈕改為白色樣式 */
+        /* 分享按鈕改為白色樣式 */
         .share-btn { 
             background-color: white !important; 
             color: var(--primary-red) !important; 
@@ -48,9 +49,12 @@
     <!-- 步驟 2 -->
     <div id="step2" class="step">
         <h2>愛在心裡口難開</h2>
+        <p style="font-size: 14px; color: #d35b5b;">(輸入完成後，請點擊預覽按鈕產生卡片)</p>
         <input type="text" id="cardTitle" placeholder="例如: 親愛的老母大人" maxlength="10">
         <textarea id="cardContent" rows="3" placeholder="例如: 謝謝您的付出與辛勞，我愛您！" maxlength="40"></textarea>
         <input type="text" id="cardSender" placeholder="署名：阿寶" maxlength="8">
+        
+        <!-- 重複預覽按鈕 -->
         <button id="btnPreview" onclick="drawCard()">預覽專屬卡片</button>
         
         <canvas id="cardCanvas" style="display:none;"></canvas>
@@ -58,16 +62,15 @@
         
         <div id="saveInstruction" style="display:none;">
             <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方按鈕分享卡片，抽獎鈕隨後出現</p>
-            <!-- 分享按鈕現在是白底紅字 -->
             <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
-            <button class="next-btn" id="btnNextStep" onclick="showStep(3)">完成分享！參加抽獎🎁</button>
-            <p id="longPressTip" class="instruction" style="display:none;">(若無法自動分享，請長按圖片傳送後點擊按鈕繼續)</p>
+            <button class="next-btn" id="btnNextStep" onclick="showStep(3)">下一步：參加抽獎🎁</button>
+            <p id="longPressTip" class="instruction" style="display:none;">(若無法自動分享，請長按圖片儲存後手動傳送，並點擊上方按鈕繼續)</p>
         </div>
     </div>
 
     <!-- 步驟 3 -->
     <div id="step3" class="step">
-        <h2>快來抽獎吧🎁</h2>
+        <h2>🎁 快來抽獎吧</h2>
         <input type="text" id="empId_display" placeholder="工號">
         <input type="text" id="dept_display" placeholder="部門">
         <input type="text" id="name_display" placeholder="姓名">
@@ -107,31 +110,49 @@
         setTimeout(() => { showStep(2); }, 1500);
     }
 
+    // 繪製卡片邏輯優化
     function drawCard() {
+        const title = document.getElementById('cardTitle').value;
+        const content = document.getElementById('cardContent').value;
+        const sender = document.getElementById('cardSender').value;
+
+        if(!title || !content || !sender) return alert("請輸入標題、內容、署名");
+
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
         img.crossOrigin = "anonymous"; 
         img.src = CARD_TEMPLATE_URL + "?v=" + new Date().getTime();
+        
         img.onload = function() {
             canvas.width = img.width; canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
             ctx.fillStyle = "#8e443d"; 
-            ctx.font = "bold 60px Microsoft JhengHei"; 
-            ctx.fillText(document.getElementById('cardTitle').value, 200, 320); 
-            ctx.font = "45px Microsoft JhengHei";
-            wrapText(ctx, document.getElementById('cardContent').value, 200, 400, 900, 55); 
-            ctx.font = "bold 60px Microsoft JhengHei"; 
-            ctx.fillText(document.getElementById('cardSender').value, 900, 950);
             
+            // 1. 標題排版 (X:130, Y:220)
+            ctx.font = "bold 55px Microsoft JhengHei"; 
+            ctx.fillText(title, 130, 300); 
+
+            // 2. 內容排版 (X:130, Y:340, 寬度限制縮小到 780 以免撞牆, 行距 60)
+            ctx.font = "40px Microsoft JhengHei";
+            wrapText(ctx, content, 130, 340, 800, 60); 
+
+            // 3. 署名排版 (X:850 靠右側, Y:890)
+            ctx.font = "bold 40px Microsoft JhengHei"; 
+            ctx.fillText(sender, 850, 990);
+            
+            // 轉成可長按圖片
             const dataURL = canvas.toDataURL("image/jpeg", 0.9);
             const finalImg = document.getElementById('finalImg');
             finalImg.src = dataURL;
             finalImg.style.display = 'block';
-            canvas.style.display = 'none';
+            
+            // 顯示下方操作區與更新按鈕文字
             document.getElementById('saveInstruction').style.display = 'block';
-            document.getElementById('btnPreview').style.display = 'none';
-            window.scrollTo(0, document.body.scrollHeight);
+            document.getElementById('btnPreview').innerText = "重新產生預覽圖片";
+            
+            // 自動滾動到下方看到成品
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         };
     }
 
@@ -152,7 +173,7 @@
 
     function unlockNextStep() {
         document.getElementById('btnNextStep').style.display = 'block';
-        window.scrollTo(0, document.body.scrollHeight);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
     function wrapText(context, text, x, y, maxWidth, lineHeight) {
@@ -170,7 +191,7 @@
         const empId = document.getElementById('empId_display').value;
         const dept = document.getElementById('dept_display').value;
         const name = document.getElementById('name_display').value;
-        if(!empId || !name) return alert("請確認資料填寫完整");
+        if(!empId || !name) return alert("請確認抽獎資料填寫完整");
         document.getElementById('btn3').disabled = true;
         const form = document.getElementById('gasForm');
         form.action = GAS_URL;
@@ -180,8 +201,8 @@
         document.getElementById('form_name').value = name;
         form.submit();
         setTimeout(() => {
-            alert("抽獎報名成功！祝您中獎！");
-            document.getElementById('btn3').innerText = "報名完成";
+            alert("抽獎報名成功！祝您中大獎 🎁");
+            document.getElementById('btn3').innerText = "已報名完成";
         }, 1500);
     }
 

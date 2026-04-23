@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>媽咪金句王</title>
-    <!-- 引入 LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root { --primary-red: #d35b5b; --bg-cream: #fdf8f1; }
@@ -18,7 +17,7 @@
         button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
         button:disabled { background-color: #ccc; }
         .share-btn { background-color: #06C755 !important; }
-        .next-btn { background-color: #f39c12 !important; display: none; } /* 初始隱藏下一步按鈕 */
+        .next-btn { background-color: #f39c12 !important; display: none; }
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
         #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
@@ -28,7 +27,6 @@
 <body>
 
 <div class="container">
-    <!-- 步驟 1 -->
     <div id="step1" class="step active">
         <h2>🌸 媽咪金句王 🌸</h2>
         <p>分享最常聽到的媽媽說的一句話</p>
@@ -36,29 +34,22 @@
         <button id="btn1" onclick="submitQuote()">送出金句，製作卡片</button>
     </div>
 
-    <!-- 步驟 2 -->
     <div id="step2" class="step">
         <h2>💖 愛在心裡難開口</h2>
         <input type="text" id="cardTitle" placeholder="標題 (例如: 親愛的老母大人)" maxlength="10">
         <textarea id="cardContent" rows="3" placeholder="想說的話..." maxlength="40"></textarea>
         <input type="text" id="cardSender" placeholder="您的姓名" maxlength="8">
         <button id="btnPreview" onclick="drawCard()">預覽並生成卡片</button>
-        
         <canvas id="cardCanvas" style="display:none;"></canvas>
         <img id="finalImg" alt="卡片生成成功">
-        
         <div id="saveInstruction" style="display:none;">
             <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方綠色按鈕分享卡片給媽咪吧！</p>
             <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
-            
-            <!-- 分享完後才會出現的按鈕 -->
             <button class="next-btn" id="btnNextStep" onclick="showStep(3)">完成分享！參加抽獎 🎁</button>
-            
             <p id="longPressTip" class="instruction" style="display:none;">(若無法自動分享，請長按圖片儲存後手動傳送，並點擊上方按鈕繼續)</p>
         </div>
     </div>
 
-    <!-- 步驟 3 -->
     <div id="step3" class="step">
         <h2>🎁 快來抽獎</h2>
         <input type="text" id="empId_display" placeholder="工號">
@@ -68,6 +59,7 @@
     </div>
 </div>
 
+<!-- 隱藏表單 -->
 <form id="gasForm" action="" method="get" target="hidden_iframe" style="display:none;">
     <input type="hidden" name="action" id="form_action">
     <input type="hidden" name="quote" id="form_quote">
@@ -78,7 +70,8 @@
 <iframe name="hidden_iframe" id="hidden_iframe"></iframe>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzIkD8DL7U3GTmz_an7_g7Yexc7-9csCQdSeRwkZ1hSYYGxClUoq2c5Tw7uBJSsdFbZsg/exec"; 
+    // 🚩 請更新為您剛才「新部署」得到的網址
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxb6ZH2XrdWxYbQVFmbiNoDBWXVUq_rZV1KffVT5OkDQFjwQs9o3C3TqQpxiwxhrLQApg/exec"; 
     const CARD_TEMPLATE_URL = "2026mommy.jpg"; 
     const MY_LIFF_ID = "2009874827-0sg2wphM"; 
 
@@ -92,7 +85,6 @@
         const quote = document.getElementById('quoteInput_display').value;
         if (!quote) return alert("請輸入內容");
         document.getElementById('btn1').disabled = true;
-        document.getElementById('btn1').innerText = "傳送中...";
         const form = document.getElementById('gasForm');
         form.action = GAS_URL;
         document.getElementById('form_action').value = "saveQuote";
@@ -111,62 +103,47 @@
             canvas.width = img.width; canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
             ctx.fillStyle = "#8e443d"; 
-            // 1. 標題：稍微往上提一點點
-        ctx.font = "bold 60px Microsoft JhengHei"; 
-        ctx.fillText(document.getElementById('cardTitle').value, 100, 180); 
+            
+            // 修正後的文字座標與大小
+            ctx.font = "bold 55px Microsoft JhengHei"; 
+            ctx.fillText(document.getElementById('cardTitle').value, 110, 180); 
 
-        // 2. 內容：調整起始高度與行距
-        ctx.font = "50px Microsoft JhengHei";
-        wrapText(ctx, document.getElementById('cardContent').value, 100, 300, 700, 50); 
+            ctx.font = "38px Microsoft JhengHei";
+            wrapText(ctx, document.getElementById('cardContent').value, 110, 310, 700, 55); 
 
-        // 3. 署名：關鍵修正！將 X 座標增加，讓名字對齊「愛您的」
-        ctx.font = "bold 38px Microsoft JhengHei"; 
-        // 建議 X 改為 840 左右，Y 維持 885~890
-        ctx.fillText(document.getElementById('cardSender').value, 840, 888);
+            ctx.font = "bold 38px Microsoft JhengHei"; 
+            ctx.fillText(document.getElementById('cardSender').value, 840, 888);
             
             const dataURL = canvas.toDataURL("image/jpeg", 0.9);
             const finalImg = document.getElementById('finalImg');
             finalImg.src = dataURL;
             finalImg.style.display = 'block';
             canvas.style.display = 'none';
-
             document.getElementById('saveInstruction').style.display = 'block';
-            document.getElementById('btnPreview').style.display = 'none'; // 生成後隱藏預覽鈕
+            document.getElementById('btnPreview').style.display = 'none';
             window.scrollTo(0, document.body.scrollHeight);
         };
     }
 
-    // 分享卡片圖檔
     async function shareCardImage() {
         const canvas = document.getElementById('cardCanvas');
         try {
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             const file = new File([blob], "mommy_card.jpg", { type: "image/jpeg" });
-
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: '給媽咪的卡片',
-                    text: '母親節快樂！'
-                });
-                // 分享動作完成後（不論是否真的送出，只要喚起選單並結束）顯示下一步
+                await navigator.share({ files: [file], title: '給媽咪的卡片' });
                 unlockNextStep();
             } else {
-                alert("您的裝置不支援自動分享，請長按圖片選擇「傳送給好友」。");
-                unlockNextStep(); // 備案：不支援分享的裝置直接解鎖，避免卡關
+                unlockNextStep();
                 document.getElementById('longPressTip').style.display = 'block';
             }
         } catch (error) {
-            console.log("分享被取消或發生錯誤:", error);
-            // 為了不讓同仁因為取消分享而卡住，建議也解鎖，或是提示他要分享才能抽獎
-            alert("提醒：分享卡片給媽媽後，即可參加抽獎喔！");
             unlockNextStep(); 
         }
     }
 
     function unlockNextStep() {
         document.getElementById('btnNextStep').style.display = 'block';
-        document.getElementById('btnShare').innerText = "再次分享卡片";
         window.scrollTo(0, document.body.scrollHeight);
     }
 
@@ -187,7 +164,6 @@
         const name = document.getElementById('name_display').value;
         if(!empId || !name) return alert("請確認資料");
         document.getElementById('btn3').disabled = true;
-        document.getElementById('btn3').innerText = "提交中...";
         const form = document.getElementById('gasForm');
         form.action = GAS_URL;
         document.getElementById('form_action').value = "saveRaffle";
@@ -196,7 +172,7 @@
         document.getElementById('form_name').value = name;
         form.submit();
         setTimeout(() => {
-            alert("活動報名成功！預祝您中獎！");
+            alert("完成活動！祝您中獎！");
             document.getElementById('btn3').innerText = "已參加抽獎";
         }, 1500);
     }

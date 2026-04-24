@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>媽咪金句王</title>
+    <!-- 引入 LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root { --primary-red: #d35b5b; --bg-cream: #fdf8f1; }
@@ -14,10 +15,19 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         h2 { color: var(--primary-red); margin-bottom: 20px; }
         textarea, input { width: 100%; padding: 12px; margin: 10px 0; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        
+        /* 一般按鈕樣式 */
         button { background-color: var(--primary-red); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-size: 18px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; transition: 0.3s; }
         button:disabled { background-color: #ccc; }
-        .share-btn { background-color: white !important; color: var(--primary-red) !important; border: 2px solid var(--primary-red) !important; }
-        .next-btn { background-color: #f39c12 !important; display: none; }
+        button:active { transform: scale(0.98); }
+
+        /* 分享按鈕 (白底紅字) */
+        .share-btn { 
+            background-color: white !important; 
+            color: var(--primary-red) !important; 
+            border: 2px solid var(--primary-red) !important; 
+        }
+        
         canvas { max-width: 100%; border-radius: 10px; margin-top: 15px; border: 1px solid #ddd; }
         #finalImg { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #ddd; }
         .instruction { font-size: 14px; color: #888; margin-top: 10px; }
@@ -27,43 +37,47 @@
 <body>
 
 <div class="container">
+    <!-- 步驟 1: 輸入金句 -->
     <div id="step1" class="step active">
         <h2>🌸 媽咪金句王 🌸</h2>
-        <p>分享最常聽到的一句話</p>
+        <p>第一步：分享最常聽到的一句話</p>
         <textarea id="quoteInput_display" rows="3" placeholder="例如：啊哩甲飽未?"></textarea>
-        <button id="btn1" onclick="submitQuote()">分享金句，來製作專屬卡片吧</button>
+        <button id="btn1" onclick="submitQuote()">送出金句來抽獎</button>
     </div>
 
+    <!-- 步驟 2: 填寫抽獎資料 -->
     <div id="step2" class="step">
-        <h2>愛在心裡口難開</h2>
-        <p style="font-size: 14px; color: #d35b5b;">(完成請點預覽)</p>
+        <h2>🎁 填寫抽獎資料 🎁</h2>
+        <p>請填寫完整資料</p>
+        <input type="text" id="empId_display" placeholder="工號 (例如: 202600510)">
+        <input type="text" id="dept_display" placeholder="公司部門(例如：投控人資部)">
+        <input type="text" id="name_display" placeholder="姓名">
+        <button id="btn3" onclick="submitRaffle()">完成抽獎，來去製作卡片</button>
+    </div>
+
+    <!-- 步驟 3: 製作卡片 -->
+    <div id="step3" class="step">
+        <h2>💖 製作專屬卡片</h2>
+        <p style="font-size: 14px; color: #d35b5b;">(預覽卡片)</p>
         <input type="text" id="cardTitle" placeholder="例如：親愛的老母大人" maxlength="10">
-        <!-- 🚩 嚴格限制 56 字 -->
-        <textarea id="cardContent" rows="4" placeholder="例如：謝謝您的付出與辛勞！" maxlength="56" style="white-space: pre-wrap;"></textarea>
+        <textarea id="cardContent" rows="4" placeholder="例如：謝謝您的付出與辛勞！母親節快樂❤" maxlength="56" style="white-space: pre-wrap;"></textarea>
         <input type="text" id="cardSender" placeholder="署名：愛您的阿寶" maxlength="10">
         
-        <button id="btnPreview" onclick="drawCard()">預覽專屬卡片</button>
+        <button id="btnPreview" onclick="drawCard()">預覽卡片</button>
         
         <canvas id="cardCanvas" style="display:none;"></canvas>
         <img id="finalImg" alt="卡片製作完成">
         
         <div id="saveInstruction" style="display:none;">
-            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊下方按鈕，立即分享卡片</p>
-            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享卡片圖檔</button>
-            <button class="next-btn" id="btnNextStep" onclick="showStep(3)">完成分享！參加抽獎🎁</button>
-            <p id="longPressTip" class="instruction" style="display:none;">(若無法分享，請長按圖片儲存傳送)</p>
+            <p class="instruction" style="color:#d35b5b; font-weight:bold;">🌸 點擊按鈕，立即分享卡片！</p>
+            <button class="share-btn" id="btnShare" onclick="shareCardImage()">分享專屬卡片</button>
+            <p class="instruction">(若無法自動分享，可長按圖片儲存後手動傳送)</p>
+            <p style="margin-top: 20px; color: #888;">感謝您的參與，祝您中大獎！</p>
         </div>
-    </div>
-
-    <div id="step3" class="step">
-        <h2>快來抽獎吧🎁</h2>
-        <input type="text" id="empId_display" placeholder="工號">
-        <input type="text" id="dept_display" placeholder="公司部門">
-        <input type="text" id="name_display" placeholder="姓名">
-        <button id="btn3" onclick="submitRaffle()">完成抽獎報名</button>
     </div>
 </div>
 
+<!-- 隱藏表單提交至 GAS -->
 <form id="gasForm" action="" method="get" target="hidden_iframe" style="display:none;">
     <input type="hidden" name="action" id="form_action">
     <input type="hidden" name="quote" id="form_quote">
@@ -81,12 +95,13 @@
     window.onload = function() {
         liff.init({ liffId: MY_LIFF_ID }).then(() => {
             if (!liff.isLoggedIn()) { liff.login(); }
-        });
+        }).catch((err) => { console.log('LIFF 初始化失敗', err); });
     };
 
+    // Step 1: 送出金句
     function submitQuote() {
         const quote = document.getElementById('quoteInput_display').value;
-        if (!quote) return alert("請輸入內容");
+        if (!quote) return alert("請輸入金句");
         document.getElementById('btn1').disabled = true;
         const form = document.getElementById('gasForm');
         form.action = GAS_URL;
@@ -96,12 +111,35 @@
         setTimeout(() => { showStep(2); }, 1500);
     }
 
+    // Step 2: 送出抽獎資料
+    function submitRaffle() {
+        const empId = document.getElementById('empId_display').value;
+        const dept = document.getElementById('dept_display').value;
+        const name = document.getElementById('name_display').value;
+        if(!empId || !name) return alert("請完整填寫工號、公司部門、姓名");
+        
+        document.getElementById('btn3').disabled = true;
+        const form = document.getElementById('gasForm');
+        form.action = GAS_URL;
+        document.getElementById('form_action').value = "saveRaffle";
+        document.getElementById('form_empId').value = empId;
+        document.getElementById('form_dept').value = dept;
+        document.getElementById('form_name').value = name;
+        form.submit();
+        
+        setTimeout(() => {
+            alert("抽獎資料填寫完成，來製作專屬卡片吧💖");
+            showStep(3);
+        }, 1500);
+    }
+
+    // Step 3: 繪製卡片
     function drawCard() {
         const title = document.getElementById('cardTitle').value;
         const content = document.getElementById('cardContent').value;
         const sender = document.getElementById('cardSender').value;
 
-        if(!title || !content || !sender) return alert("請填寫完整");
+        if(!title || !content || !sender) return alert("請完整填寫標題、卡片內容與署名");
 
         const canvas = document.getElementById('cardCanvas');
         const ctx = canvas.getContext('2d');
@@ -114,15 +152,15 @@
             ctx.drawImage(img, 0, 0);
             ctx.fillStyle = "#8e443d"; 
             
-            // 標題排版
+            // 標題座標 (維持您先前的設定)
             ctx.font = "bold 66px Microsoft JhengHei"; 
             ctx.fillText(title, 230, 290); 
 
-            // 內容排版 (呼叫強化後的換行函式)
+            // 內容座標 (支援手動換行)
             ctx.font = "55px Microsoft JhengHei";
             wrapText(ctx, content, 230, 400, 800, 80); 
 
-            // 署名排版
+            // 署名座標
             ctx.font = "bold 40px Microsoft JhengHei"; 
             ctx.fillText(sender, 730, 900);
             
@@ -132,26 +170,20 @@
             finalImg.style.display = 'block';
             
             document.getElementById('saveInstruction').style.display = 'block';
-            document.getElementById('btnPreview').innerText = "重新產生預覽卡片";
+            document.getElementById('btnPreview').innerText = "重新製作卡片";
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         };
     }
 
-    // 🚩 強化版換行邏輯
+    // 換行邏輯 (支援 Enter)
     function wrapText(context, text, x, y, maxWidth, lineHeight) {
-        // 先處理手動換行 \n
         const paragraphs = text.split('\n');
-        
         for (let i = 0; i < paragraphs.length; i++) {
             let words = paragraphs[i].split('');
             let line = '';
-
             for (let n = 0; n < words.length; n++) {
                 let testLine = line + words[n];
-                let metrics = context.measureText(testLine);
-                let testWidth = metrics.width;
-
-                if (testWidth > maxWidth && n > 0) {
+                if (context.measureText(testLine).width > maxWidth && n > 0) {
                     context.fillText(line, x, y);
                     line = words[n];
                     y += lineHeight;
@@ -160,11 +192,11 @@
                 }
             }
             context.fillText(line, x, y);
-            // 每段手動換行後，y也要下移一行
             y += lineHeight;
         }
     }
 
+    // 分享卡片圖檔
     async function shareCardImage() {
         const canvas = document.getElementById('cardCanvas');
         try {
@@ -172,36 +204,10 @@
             const file = new File([blob], "mommy_card.jpg", { type: "image/jpeg" });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({ files: [file], title: '母親節快樂🌼' });
-                unlockNextStep();
             } else {
-                unlockNextStep();
-                document.getElementById('longPressTip').style.display = 'block';
+                alert("裝置不支援自動分享，請長按圖片儲存後再傳送給媽咪喔！");
             }
-        } catch (e) { unlockNextStep(); }
-    }
-
-    function unlockNextStep() {
-        document.getElementById('btnNextStep').style.display = 'block';
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-
-    function submitRaffle() {
-        const empId = document.getElementById('empId_display').value;
-        const dept = document.getElementById('dept_display').value;
-        const name = document.getElementById('name_display').value;
-        if(!empId || !name) return alert("請填寫工號與姓名");
-        document.getElementById('btn3').disabled = true;
-        const form = document.getElementById('gasForm');
-        form.action = GAS_URL;
-        document.getElementById('form_action').value = "saveRaffle";
-        document.getElementById('form_empId').value = empId;
-        document.getElementById('form_dept').value = dept;
-        document.getElementById('form_name').value = name;
-        form.submit();
-        setTimeout(() => {
-            alert("抽獎報名成功！祝您中大獎🎁");
-            document.getElementById('btn3').innerText = "已完成活動";
-        }, 1500);
+        } catch (e) { console.log("分享取消或失敗"); }
     }
 
     function showStep(s) {
